@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: frontendserver
+  name: frontendserver
+  namespace: demo2server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontendserver
+  template:
+    metadata:
+      labels:
+        app: frontendserver
+    spec:
+      containers:
+      - image: goserver:0.1
+        name: goserver
+        command: ["./goserver","frontend"]
+        env:
+        - name: API_HOST
+          value: "apiserver"
+        - name: API_PORT
+          value: "3000"

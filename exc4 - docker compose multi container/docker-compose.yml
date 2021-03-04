@@ -1,0 +1,16 @@
+services:
+  frontend:
+    image: goserver:0.1
+    ports: 
+      - "8080:8000"
+    command: ["./goserver","frontend"]
+    environment:
+      - API_HOST=apiserver
+      - API_PORT=3000
+    depends_on:
+      - apiserver   
+  apiserver:
+    image: goserver:0.1
+    expose:
+      - "3000"
+    command: ["./goserver","rest"]

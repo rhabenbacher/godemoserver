@@ -1,0 +1,6 @@
+services:
+  frontend:
+    image: goserver:0.1
+    ports: 
+      - "8080:9000"
+    command: ["./goserver","standalone"]   
