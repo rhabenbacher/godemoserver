@@ -21,7 +21,8 @@ func (logs *serverLogs) getMuxforApi() *http.ServeMux {
 func (logs *serverLogs) getTime(w http.ResponseWriter, r *http.Request) {
 
 	logs.infoLog.Println("getTime: received request")
-	response := Response{os.Getenv("HOSTNAME"), time.Now().Format("02 Jan 06 15:04:01.1234 MST")}
+	tnow := time.Now()
+	response := Response{os.Getenv("HOSTNAME"), tnow.Format("02.01.2006 15:04:05.000")}
 	json, err := json.Marshal(response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
