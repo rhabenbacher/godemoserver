@@ -7,9 +7,8 @@ FROM golang:1.16-alpine as builder
 ##
 ## create a workdir and copy go files
 ```yml
-WORKDIR /go/src/training/server
-COPY go.mod .
-COPY ./server/* /go/src/training/server/
+WORKDIR /go/src
+COPY ./server/* ./
 ```
 ## build goserver
 ```yml
@@ -25,7 +24,7 @@ WORKDIR /usr/local/bin
 ```
 ## copy executable from builder stage
 ```yml
-COPY --from=builder /go/src/training/server/app/goserver .
+COPY --from=builder /go/src/app/goserver .
 ```
 ## start goserver in standalone mode
 ```yml

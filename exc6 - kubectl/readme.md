@@ -3,7 +3,7 @@
 ## Create a deployment
 
 ```sh
-kubectl create deployment goserver --image=goserver:0.1
+kubectl create deployment goserver --image=goserver:0.2
 ```
 
 ## Create a service and expose it on port 8080
