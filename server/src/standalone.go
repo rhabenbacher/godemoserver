@@ -74,11 +74,14 @@ const templateHtml = `
 
 `
 
-func (logs *serverLogs) getMuxforStandAloneServer() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", logs.home)
-	mux.HandleFunc("/fibonacci", logs.fibonacci)
-	return mux
+func getMuxforStandAloneServer() func(logs *serverLogs) *http.ServeMux {
+
+	return func(logs *serverLogs) *http.ServeMux {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", logs.home)
+		mux.HandleFunc("/fibonacci", logs.fibonacci)
+		return mux
+	}
 }
 
 func calculateFibonacci(n int) *big.Int {
@@ -142,23 +145,8 @@ func (logs *serverLogs) home(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (logs *serverLogs) logStartupInfo(mode string, port string) {
-	logs.infoLog.Printf("Start %v server on port %v", mode, port)
-	logs.infoLog.Println("Docker environment detected:", isRunningInDockerContainer())
-	logs.infoLog.Println("Kubernetes environment (Pod) detected:", isRunningInKubernetesPod())
-}
-
 func (c *Config) runStandaloneServer() {
+	c.handlerFunc = getMuxforStandAloneServer()
+	c.startServer([]string{"serving in standalone mode"})
 
-	logs := &serverLogs{}
-	logs.setup()
-
-	server := &http.Server{
-		Addr:     ":" + c.port,
-		ErrorLog: logs.errorLog,
-		Handler:  logs.getMuxforStandAloneServer(),
-	}
-	logs.logStartupInfo("standalone", c.port)
-	err := server.ListenAndServe()
-	logs.errorLog.Fatal(err)
 }

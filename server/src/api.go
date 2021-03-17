@@ -12,10 +12,12 @@ type Response struct {
 	Time string
 }
 
-func (logs *serverLogs) getMuxforApi() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/time", logs.getTime)
-	return mux
+func getMuxforApi() func(logs *serverLogs) *http.ServeMux {
+	return func(logs *serverLogs) *http.ServeMux {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/time", logs.getTime)
+		return mux
+	}
 }
 
 func (logs *serverLogs) getTime(w http.ResponseWriter, r *http.Request) {
@@ -35,16 +37,7 @@ func (logs *serverLogs) getTime(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Config) runApiServer() {
+	c.handlerFunc = getMuxforApi()
+	c.startServer([]string{"serving in api mode", "providing endpoint /time"})
 
-	logs := &serverLogs{}
-	logs.setup()
-
-	server := &http.Server{
-		Addr:     ":" + c.port,
-		ErrorLog: logs.errorLog,
-		Handler:  logs.getMuxforApi(),
-	}
-	logs.logStartupInfo("api", c.port)
-	err := server.ListenAndServe()
-	logs.errorLog.Fatal(err)
 }

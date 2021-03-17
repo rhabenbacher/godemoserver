@@ -8,10 +8,13 @@ import (
 	"os"
 )
 
-func (logs *serverLogs) getMuxforFrontend() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", logs.showTime)
-	return mux
+func getMuxforFrontend() func(logs *serverLogs) *http.ServeMux {
+
+	return func(logs *serverLogs) *http.ServeMux {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/", logs.showTime)
+		return mux
+	}
 }
 
 func getEnvForFrontend() (string, string, bool) {
@@ -46,8 +49,7 @@ func (logs *serverLogs) showTime(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := fmt.Sprintf("Host %v sent time: %v", respStruct.Name, respStruct.Time)
-	w.Write([]byte(message))
+	fmt.Fprintf(w, "Host %v sent time: %v", respStruct.Name, respStruct.Time)
 
 }
 
@@ -56,18 +58,15 @@ func (c *Config) runFrontendServer() {
 	logs := &serverLogs{}
 	logs.setup()
 
-	_, _, ok := getEnvForFrontend()
+	apiHost, apiPort, ok := getEnvForFrontend()
 	if !ok {
+		logs := &serverLogs{}
+		logs.setup()
 		logs.errorLog.Println("Frontend: API_HOST or API_PORT not set")
 		return
 	}
 
-	server := &http.Server{
-		Addr:     ":" + c.port,
-		ErrorLog: logs.errorLog,
-		Handler:  logs.getMuxforFrontend(),
-	}
-	logs.logStartupInfo("frontend", c.port)
-	err := server.ListenAndServe()
-	logs.errorLog.Fatal(err)
+	c.handlerFunc = getMuxforFrontend()
+	c.startServer([]string{"serving in frontend mode", "API_HOST:" + apiHost, "API_PORT:" + apiPort})
+
 }

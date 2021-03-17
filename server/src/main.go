@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+	"net/http"
 	"os"
 	"strings"
 )
@@ -44,12 +44,8 @@ The Environment variables API_HOST and API_PORT have to be set
 `
 
 type Config struct {
-	port string
-}
-
-type serverLogs struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
+	port        string
+	handlerFunc func(logs *serverLogs) *http.ServeMux
 }
 
 func (c *Config) setupMenu() *flag.FlagSet {
@@ -81,11 +77,6 @@ func (c *Config) setupRestSubMenu() *flag.FlagSet {
 
 func (c *Config) setupFrontendSubMenu() *flag.FlagSet {
 	return c.setupSubMenu("frontend", "8000", usageFrontend)
-}
-
-func (logs *serverLogs) setup() {
-	logs.infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	logs.errorLog = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
 func parseFlags(flagSet *flag.FlagSet) func() {
