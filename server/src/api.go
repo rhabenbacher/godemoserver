@@ -7,12 +7,12 @@ import (
 	"time"
 )
 
-type Response struct {
+type TimeResponse struct {
 	Name string
 	Time string
 }
 
-func getMuxforApi() func(logs *serverLogs) *http.ServeMux {
+func getMuxforApi() HandlerFunc {
 	return func(logs *serverLogs) *http.ServeMux {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/time", logs.getTime)
@@ -24,7 +24,7 @@ func (logs *serverLogs) getTime(w http.ResponseWriter, r *http.Request) {
 
 	logs.infoLog.Println("getTime: received request")
 	tnow := time.Now()
-	response := Response{os.Getenv("HOSTNAME"), tnow.Format("02.01.2006 15:04:05.000")}
+	response := TimeResponse{os.Getenv("HOSTNAME"), tnow.Format("02.01.2006 15:04:05.000")}
 	json, err := json.Marshal(response)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

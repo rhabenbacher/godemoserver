@@ -43,9 +43,11 @@ Server calls rest Api and shows result :-)
 The Environment variables API_HOST and API_PORT have to be set 
 `
 
+type HandlerFunc func(*serverLogs) *http.ServeMux
+
 type Config struct {
 	port        string
-	handlerFunc func(logs *serverLogs) *http.ServeMux
+	handlerFunc HandlerFunc
 }
 
 func (c *Config) setupMenu() *flag.FlagSet {

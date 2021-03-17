@@ -74,7 +74,7 @@ const templateHtml = `
 
 `
 
-func getMuxforStandAloneServer() func(logs *serverLogs) *http.ServeMux {
+func getMuxforStandAloneServer() HandlerFunc {
 
 	return func(logs *serverLogs) *http.ServeMux {
 		mux := http.NewServeMux()

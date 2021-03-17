@@ -3,12 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 )
 
-func getMuxforFrontend() func(logs *serverLogs) *http.ServeMux {
+func getMuxforFrontend() HandlerFunc {
 
 	return func(logs *serverLogs) *http.ServeMux {
 		mux := http.NewServeMux()
@@ -26,31 +26,49 @@ func getEnvForFrontend() (string, string, bool) {
 	return "", "", false
 }
 
-func (logs *serverLogs) showTime(w http.ResponseWriter, r *http.Request) {
-
+func (logs *serverLogs) httpGetTime(w http.ResponseWriter) (*http.Response, error) {
 	host, port, _ := getEnvForFrontend()
-
 	response, err := http.Get(fmt.Sprintf("http://%s:%s/time", host, port))
 	if err != nil {
 		http.Error(w, "Cannot connect to API :-(", http.StatusInternalServerError)
 		logs.errorLog.Println("Frontend: showTime - http Get Error", err.Error())
-		return
+		return nil, err
 	}
+	return response, nil
+}
 
-	defer response.Body.Close()
-
-	bodyBytes, _ := ioutil.ReadAll(response.Body)
-
-	var respStruct Response
-	err = json.Unmarshal(bodyBytes, &respStruct)
+func decodeTimeResponse(res *http.Response) (timeResponse *TimeResponse) {
+	dec := json.NewDecoder(res.Body)
+	defer res.Body.Close()
+	err := dec.Decode(&timeResponse)
 	if err != nil {
-		http.Error(w, "Cannot connect to API :-(", http.StatusInternalServerError)
-		logs.errorLog.Println("Frontend: showTime - json Unmarshal", err.Error())
-		return
+		timeResponse = nil
+	}
+	return
+}
+
+func (logs *serverLogs) getTimefromAPIServer(w http.ResponseWriter) *TimeResponse {
+
+	response, err := logs.httpGetTime(w)
+	if err != nil {
+		return nil
 	}
 
-	fmt.Fprintf(w, "Host %v sent time: %v", respStruct.Name, respStruct.Time)
+	timeStruct := decodeTimeResponse(response)
+	if timeStruct == nil {
+		http.Error(w, "Error decoding Timer Response", http.StatusInternalServerError)
+		logs.errorLog.Println("Frontend: Error decoding Time Response")
+	}
+	return timeStruct
+}
 
+func (logs *serverLogs) showTime(w http.ResponseWriter, r *http.Request) {
+
+	respStruct := logs.getTimefromAPIServer(w)
+	if respStruct == nil {
+		return
+	}
+	fmt.Fprintf(w, "Host %v sent time: %v", respStruct.Name, respStruct.Time)
 }
 
 func (c *Config) runFrontendServer() {
@@ -60,9 +78,7 @@ func (c *Config) runFrontendServer() {
 
 	apiHost, apiPort, ok := getEnvForFrontend()
 	if !ok {
-		logs := &serverLogs{}
-		logs.setup()
-		logs.errorLog.Println("Frontend: API_HOST or API_PORT not set")
+		log.Fatalln("Frontend: API_HOST or API_PORT not set")
 		return
 	}
 
