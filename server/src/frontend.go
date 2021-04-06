@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func getMuxforFrontend() HandlerFunc {
@@ -40,7 +42,14 @@ func getEnvForFrontend() (string, string, error) {
 
 func (logs serverLogs) httpGetTime(w http.ResponseWriter) (*http.Response, error) {
 	host, port, _ := getEnvForFrontend()
-	response, err := http.Get(fmt.Sprintf("http://%s:%s/time", host, port))
+	client := &http.Client{Timeout: 5 * time.Second}
+	req, err := http.NewRequestWithContext(context.Background(),
+		http.MethodGet, fmt.Sprintf("http://%s:%s/time", host, port), nil)
+	if err != nil {
+		panic(err)
+	}
+	// response, err := http.Get(fmt.Sprintf("http://%s:%s/time", host, port))
+	response, err := client.Do(req)
 	if err != nil {
 		http.Error(w, "Cannot connect to API :-(", http.StatusInternalServerError)
 		logs.errorLog.Println("Frontend: showTime - http Get Error", err.Error())
@@ -54,9 +63,9 @@ func decodeTimeResponse(res *http.Response) (timeResponse *TimeResponse) {
 	defer res.Body.Close()
 	err := dec.Decode(&timeResponse)
 	if err != nil {
-		timeResponse = nil
+		return nil
 	}
-	return
+	return timeResponse
 }
 
 func (logs serverLogs) getTimefromAPIServer(w http.ResponseWriter) *TimeResponse {

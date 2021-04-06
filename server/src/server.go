@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type serverLogs struct {
@@ -29,9 +30,12 @@ func (c *Config) startServer(startupMessages []string) {
 	logs := setupServerLogs()
 
 	server := &http.Server{
-		Addr:     ":" + c.port,
-		ErrorLog: logs.errorLog,
-		Handler:  c.handlerFunc(logs),
+		Addr:         ":" + c.port,
+		ErrorLog:     logs.errorLog,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  30 * time.Second,
+		Handler:      c.handlerFunc(logs),
 	}
 
 	logs.logStartupInfo(c.port)
