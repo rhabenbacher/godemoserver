@@ -22,7 +22,7 @@ func getMuxforApi() HandlerFunc {
 
 func (logs serverLogs) getTime(w http.ResponseWriter, r *http.Request) {
 
-	logs.infoLog.Println("getTime: received request")
+	logs.infoLog.Printf("/time received request from %s", r.Header.Get("User-Agent"))
 	tnow := time.Now()
 	response := TimeResponse{os.Getenv("HOSTNAME"), tnow.Format("02.01.2006 15:04:05.000")}
 	json, err := json.Marshal(response)

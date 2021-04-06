@@ -75,7 +75,7 @@ func (logs serverLogs) getTimefromAPIServer(w http.ResponseWriter) *TimeResponse
 }
 
 func (logs serverLogs) showTime(w http.ResponseWriter, r *http.Request) {
-
+	logs.infoLog.Printf("received request from %s", r.Header.Get("User-Agent"))
 	respStruct := logs.getTimefromAPIServer(w)
 	if respStruct == nil {
 		return

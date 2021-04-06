@@ -102,12 +102,14 @@ func calculateFibonacci(n int) *big.Int {
 }
 
 func (logs serverLogs) fibonacci(w http.ResponseWriter, r *http.Request) {
+	logs.infoLog.Printf("/fibonacci received request from %s", r.Header.Get("User-Agent"))
 	n, err := strconv.Atoi(r.URL.Query().Get("n"))
 	if err != nil || n < 0 {
 		http.Error(w, "Parmeter n is required", http.StatusInternalServerError)
 		return
 
 	}
+	logs.infoLog.Printf("calculate fibonacci for %d", n)
 	start := time.Now()
 	fibN := calculateFibonacci(n).String()
 	t := time.Now()
@@ -129,6 +131,7 @@ func (logs serverLogs) fibonacci(w http.ResponseWriter, r *http.Request) {
 }
 
 func (logs serverLogs) home(w http.ResponseWriter, r *http.Request) {
+	logs.infoLog.Printf("/ received request from %s", r.Header.Get("User-Agent"))
 	now := time.Now().Format(time.RFC822)
 	out := OutputStruc{now, isRunningInDockerContainer(), isRunningInKubernetesPod(), os.Getenv("HOSTNAME")}
 
