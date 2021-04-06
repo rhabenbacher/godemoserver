@@ -13,14 +13,14 @@ type TimeResponse struct {
 }
 
 func getMuxforApi() HandlerFunc {
-	return func(logs *serverLogs) *http.ServeMux {
+	return func(logs serverLogs) *http.ServeMux {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/time", logs.getTime)
 		return mux
 	}
 }
 
-func (logs *serverLogs) getTime(w http.ResponseWriter, r *http.Request) {
+func (logs serverLogs) getTime(w http.ResponseWriter, r *http.Request) {
 
 	logs.infoLog.Println("getTime: received request")
 	tnow := time.Now()

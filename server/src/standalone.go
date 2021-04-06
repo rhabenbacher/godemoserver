@@ -76,7 +76,7 @@ const templateHtml = `
 
 func getMuxforStandAloneServer() HandlerFunc {
 
-	return func(logs *serverLogs) *http.ServeMux {
+	return func(logs serverLogs) *http.ServeMux {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/", logs.home)
 		mux.HandleFunc("/fibonacci", logs.fibonacci)
@@ -101,7 +101,7 @@ func calculateFibonacci(n int) *big.Int {
 
 }
 
-func (logs *serverLogs) fibonacci(w http.ResponseWriter, r *http.Request) {
+func (logs serverLogs) fibonacci(w http.ResponseWriter, r *http.Request) {
 	n, err := strconv.Atoi(r.URL.Query().Get("n"))
 	if err != nil || n < 0 {
 		http.Error(w, "Parmeter n is required", http.StatusInternalServerError)
@@ -128,7 +128,7 @@ func (logs *serverLogs) fibonacci(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (logs *serverLogs) home(w http.ResponseWriter, r *http.Request) {
+func (logs serverLogs) home(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().Format(time.RFC822)
 	out := OutputStruc{now, isRunningInDockerContainer(), isRunningInKubernetesPod(), os.Getenv("HOSTNAME")}
 

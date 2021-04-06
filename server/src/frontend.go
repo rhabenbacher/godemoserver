@@ -10,23 +10,35 @@ import (
 
 func getMuxforFrontend() HandlerFunc {
 
-	return func(logs *serverLogs) *http.ServeMux {
+	return func(logs serverLogs) *http.ServeMux {
 		mux := http.NewServeMux()
 		mux.HandleFunc("/", logs.showTime)
 		return mux
 	}
 }
 
-func getEnvForFrontend() (string, string, bool) {
-	host := os.Getenv("API_HOST")
-	port := os.Getenv("API_PORT")
-	if len(host) > 0 && len(port) > 0 {
-		return host, port, true
+func getEnvvar(name string) (string, error) {
+	envvar := os.Getenv(name)
+	if len(envvar) == 0 {
+		return "", fmt.Errorf("%s not set", name)
 	}
-	return "", "", false
+	return envvar, nil
 }
 
-func (logs *serverLogs) httpGetTime(w http.ResponseWriter) (*http.Response, error) {
+func getEnvForFrontend() (string, string, error) {
+	host, err := getEnvvar("API_HOST")
+	if err != nil {
+		return "", "", err
+	}
+	port, err := getEnvvar("API_PORT")
+	if err != nil {
+		return "", "", err
+	}
+
+	return host, port, nil
+}
+
+func (logs serverLogs) httpGetTime(w http.ResponseWriter) (*http.Response, error) {
 	host, port, _ := getEnvForFrontend()
 	response, err := http.Get(fmt.Sprintf("http://%s:%s/time", host, port))
 	if err != nil {
@@ -47,7 +59,7 @@ func decodeTimeResponse(res *http.Response) (timeResponse *TimeResponse) {
 	return
 }
 
-func (logs *serverLogs) getTimefromAPIServer(w http.ResponseWriter) *TimeResponse {
+func (logs serverLogs) getTimefromAPIServer(w http.ResponseWriter) *TimeResponse {
 
 	response, err := logs.httpGetTime(w)
 	if err != nil {
@@ -62,7 +74,7 @@ func (logs *serverLogs) getTimefromAPIServer(w http.ResponseWriter) *TimeRespons
 	return timeStruct
 }
 
-func (logs *serverLogs) showTime(w http.ResponseWriter, r *http.Request) {
+func (logs serverLogs) showTime(w http.ResponseWriter, r *http.Request) {
 
 	respStruct := logs.getTimefromAPIServer(w)
 	if respStruct == nil {
@@ -73,12 +85,10 @@ func (logs *serverLogs) showTime(w http.ResponseWriter, r *http.Request) {
 
 func (c *Config) runFrontendServer() {
 
-	logs := &serverLogs{}
-	logs.setup()
-
-	apiHost, apiPort, ok := getEnvForFrontend()
-	if !ok {
-		log.Fatalln("Frontend: API_HOST or API_PORT not set")
+	apiHost, apiPort, err := getEnvForFrontend()
+	if err != nil {
+		log.Println("API_HOST and API_PORT have to be set as environment variables")
+		log.Fatalln(err)
 		return
 	}
 

@@ -11,12 +11,14 @@ type serverLogs struct {
 	infoLog  *log.Logger
 }
 
-func (logs *serverLogs) setup() {
-	logs.infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	logs.errorLog = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+func setupServerLogs() serverLogs {
+	return serverLogs{
+		infoLog:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		errorLog: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+	}
 }
 
-func (logs *serverLogs) logStartupInfo(port string) {
+func (logs serverLogs) logStartupInfo(port string) {
 	logs.infoLog.Printf("Start server on port %v", port)
 	logs.infoLog.Println("Docker environment detected:", isRunningInDockerContainer())
 	logs.infoLog.Println("Kubernetes environment (Pod) detected:", isRunningInKubernetesPod())
@@ -24,8 +26,7 @@ func (logs *serverLogs) logStartupInfo(port string) {
 
 func (c *Config) startServer(startupMessages []string) {
 
-	logs := &serverLogs{}
-	logs.setup()
+	logs := setupServerLogs()
 
 	server := &http.Server{
 		Addr:     ":" + c.port,
