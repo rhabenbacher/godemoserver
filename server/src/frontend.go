@@ -49,12 +49,8 @@ func (logs serverLogs) httpGetTime(w http.ResponseWriter) (*http.Response, error
 		panic(err)
 	}
 
-	response, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
+	return client.Do(req)
 
-	return response, nil
 }
 
 func decodeTimeResponse(res *http.Response) (timeResponse *TimeResponse) {
@@ -67,25 +63,44 @@ func decodeTimeResponse(res *http.Response) (timeResponse *TimeResponse) {
 	return timeResponse
 }
 
-func (logs serverLogs) getTimefromAPIServer(w http.ResponseWriter) *TimeResponse {
-
-	response, err := logs.httpGetTime(w)
-
+func (logs serverLogs) errorNoApiConnection(w http.ResponseWriter, err error) bool {
 	if err != nil {
 		http.Error(w, "Cannot connect to API :-(", http.StatusInternalServerError)
 		logs.errorLog.Println("Frontend: showTime - http Get Error", err.Error())
+		return true
+	}
+	return false
+}
+
+func (logs serverLogs) errorApiWithBadStatus(w http.ResponseWriter, statusCode int) bool {
+	if statusCode != http.StatusOK {
+		http.Error(w, fmt.Sprintf("API responded with status %v :-(", statusCode), http.StatusInternalServerError)
+		return true
+	}
+	return false
+}
+
+func (logs serverLogs) errorDecodingResponse(w http.ResponseWriter, isError bool) {
+	if isError {
+		http.Error(w, "Error decoding Timer Response", http.StatusInternalServerError)
+		logs.errorLog.Println("Frontend: Error decoding Time Response")
+	}
+}
+
+func (logs serverLogs) getTimefromAPIServer(w http.ResponseWriter) *TimeResponse {
+
+	response, err := logs.httpGetTime(w)
+	if logs.errorNoApiConnection(w, err) {
 		return nil
 	}
-	if response.StatusCode != http.StatusOK {
-		http.Error(w, fmt.Sprintf("API responded with status %v :-(", response.StatusCode), http.StatusInternalServerError)
+
+	if logs.errorApiWithBadStatus(w, response.StatusCode) {
 		return nil
 	}
 
 	timeStruct := decodeTimeResponse(response)
-	if timeStruct == nil {
-		http.Error(w, "Error decoding Timer Response", http.StatusInternalServerError)
-		logs.errorLog.Println("Frontend: Error decoding Time Response")
-	}
+	logs.errorDecodingResponse(w, timeStruct == nil)
+
 	return timeStruct
 }
 

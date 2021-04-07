@@ -57,6 +57,18 @@ func TestFrontendHandler(t *testing.T) {
 			want:       "API responded with status 500",
 			statusCode: http.StatusInternalServerError,
 		},
+		{
+			name: "handle empty body",
+			setenv: func(apiHost string, apiPort string) {
+				os.Setenv("API_HOST", apiHost)
+				os.Setenv("API_PORT", apiPort)
+			},
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				fmt.Fprintln(w, "")
+			},
+			want:       "Error decoding Timer Response",
+			statusCode: http.StatusInternalServerError,
+		},
 	}
 
 	for _, singletest := range tests {
