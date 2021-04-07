@@ -131,7 +131,12 @@ func (logs serverLogs) fibonacci(w http.ResponseWriter, r *http.Request) {
 }
 
 func (logs serverLogs) home(w http.ResponseWriter, r *http.Request) {
-	logs.infoLog.Printf("/ received request from %s", r.Header.Get("User-Agent"))
+	logs.infoLog.Printf("received request from %s", r.Header.Get("User-Agent"))
+	if path := r.URL.Path; path != "/" {
+		http.NotFound(w, r)
+		logs.errorLog.Printf("URL %s not found", path)
+		return
+	}
 	now := time.Now().Format(time.RFC822)
 	out := OutputStruc{now, isRunningInDockerContainer(), isRunningInKubernetesPod(), os.Getenv("HOSTNAME")}
 
