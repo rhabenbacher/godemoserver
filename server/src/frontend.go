@@ -48,13 +48,12 @@ func (logs serverLogs) httpGetTime(w http.ResponseWriter) (*http.Response, error
 	if err != nil {
 		panic(err)
 	}
-	// response, err := http.Get(fmt.Sprintf("http://%s:%s/time", host, port))
+
 	response, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "Cannot connect to API :-(", http.StatusInternalServerError)
-		logs.errorLog.Println("Frontend: showTime - http Get Error", err.Error())
 		return nil, err
 	}
+
 	return response, nil
 }
 
@@ -71,7 +70,14 @@ func decodeTimeResponse(res *http.Response) (timeResponse *TimeResponse) {
 func (logs serverLogs) getTimefromAPIServer(w http.ResponseWriter) *TimeResponse {
 
 	response, err := logs.httpGetTime(w)
+
 	if err != nil {
+		http.Error(w, "Cannot connect to API :-(", http.StatusInternalServerError)
+		logs.errorLog.Println("Frontend: showTime - http Get Error", err.Error())
+		return nil
+	}
+	if response.StatusCode != http.StatusOK {
+		http.Error(w, fmt.Sprintf("API responded with status %v :-(", response.StatusCode), http.StatusInternalServerError)
 		return nil
 	}
 
