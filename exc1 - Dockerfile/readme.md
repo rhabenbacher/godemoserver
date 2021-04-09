@@ -8,7 +8,6 @@ FROM golang:1.16-alpine
 ## create a workdir and copy go files
 ```
 WORKDIR /go/src/training/server
-COPY go.mod .
 COPY ./server/* ./
 ```
 ## build goserver
