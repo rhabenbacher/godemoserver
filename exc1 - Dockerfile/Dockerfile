@@ -1,7 +1,7 @@
 FROM golang:1.16-alpine
 
-WORKDIR /go/src/training/server
-COPY ./server/* ./
+WORKDIR /go/src
+COPY * .
 
-RUN GOOS=linux go build -o app/goserver .
+RUN go build -o app/goserver .
 CMD ["./app/goserver","standalone"]

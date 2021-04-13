@@ -16,6 +16,6 @@ spec:
         app: goserver
     spec:
       containers:
-      - image: goserver:0.1
+      - image: goserver:0.2
         name: goserver
         command: ["./goserver","standalone"]

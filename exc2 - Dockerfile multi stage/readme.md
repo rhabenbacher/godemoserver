@@ -12,7 +12,7 @@ COPY ./server/* ./
 ```
 ## build goserver
 ```yml
-RUN GOOS=linux go build -o app/goserver .
+RUN go build -o app/goserver .
 ```
 ## select alpine for production use
 ```yml
